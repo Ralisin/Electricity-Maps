@@ -1,0 +1,133 @@
+version: "3.8"
+
+services:
+  nifi:
+    build: ./docker-NiFi
+    image: nifi-with-hdfs:1.0
+    ports:
+      - "8443:8443"
+    environment:
+      - NIFI_SECURITY_USER_OIDC_ENABLED=false
+      - NIFI_WEB_HTTPS_PORT=8443
+      - SINGLE_USER_CREDENTIALS_USERNAME=admin
+      - SINGLE_USER_CREDENTIALS_PASSWORD=passwordpass
+    volumes:
+      - nifi_data:/opt/nifi/nifi-current/data
+      - ./docker-NiFi/hadoop-conf:/opt/hadoop-conf   # montiamo config Hadoop dentro NiFi
+      - ./scripts:/app                               # Monta gli script Spark
+    networks:
+      - hadoop_network
+
+  hadoop-master:
+    build: ./docker-hadoop
+    image: hadoop:3.3.6
+    container_name: master
+    hostname: master
+    networks:
+      - hadoop_network
+    ports:
+      - "9870:9870"    # NameNode Web UI
+      - "54310:54310"  # Porta RPC NameNode
+    stdin_open: true
+    tty: true
+
+  hadoop-slave1:
+    build: ./docker-hadoop
+    image: hadoop:3.3.6
+    container_name: slave1
+    hostname: slave1
+    depends_on:
+      - hadoop-master
+    networks:
+      - hadoop_network
+    ports:
+      - "9864:9864"  # DataNode
+    stdin_open: true
+    tty: true
+
+  hadoop-slave2:
+    build: ./docker-hadoop
+    image: hadoop:3.3.6
+    container_name: slave2
+    hostname: slave1
+    depends_on:
+      - hadoop-master
+    networks:
+      - hadoop_network
+    ports:
+      - "9863:9864"  # DataNode
+    stdin_open: true
+    tty: true
+
+  hadoop-slave3:
+    build: ./docker-hadoop
+    image: hadoop:3.3.6
+    container_name: slave3
+    hostname: slave1
+    depends_on:
+      - hadoop-master
+    networks:
+      - hadoop_network
+    ports:
+      - "9862:9864"  # DataNode
+    stdin_open: true
+    tty: true
+
+#  airflow:
+#    image: apache/airflow:2.9.0
+#    container_name: airflow
+#    depends_on:
+#      - hadoop-master
+#      - spark-master
+#    environment:
+#      AIRFLOW__CORE__EXECUTOR: SequentialExecutor
+#      AIRFLOW__CORE__FERNET_KEY: 'E5Z-81zWMjjdtqjvvQSw2kv52_v3yvcaXMMCkE3MOcI='
+#      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow.db
+#      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+#    ports:
+#      - "8081:8080"
+#    volumes:
+#      - ./airflow/entrypoint.sh:/opt/airflow/entrypoint.sh
+#      - ./airflow/dags:/opt/airflow/dags
+#      - ./scripts:/app
+#    command: bash /opt/airflow/entrypoint.sh
+#    networks:
+#      - hadoop_network
+
+  spark-master:
+    image: bitnami/spark:latest
+    container_name: spark-master
+    environment:
+      - SPARK_MODE=master
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - HOME=/home
+    ports:
+      - "7077:7077"
+      - "8080:8080"
+    volumes:
+      - ./scripts:/app
+    networks:
+      - hadoop_network
+
+  spark-worker:
+    image: bitnami/spark:latest
+    container_name: spark-worker
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - HOME=/home
+    depends_on:
+      - spark-master
+    volumes:
+      - ./scripts:/app
+    networks:
+      - hadoop_network
+
+volumes:
+  nifi_data:
+  airflow_logs:
+
+networks:
+  hadoop_network:
+    driver: bridge
