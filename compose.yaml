@@ -73,27 +73,6 @@ services:
     stdin_open: true
     tty: true
 
-#  airflow:
-#    image: apache/airflow:2.9.0
-#    container_name: airflow
-#    depends_on:
-#      - hadoop-master
-#      - spark-master
-#    environment:
-#      AIRFLOW__CORE__EXECUTOR: SequentialExecutor
-#      AIRFLOW__CORE__FERNET_KEY: 'E5Z-81zWMjjdtqjvvQSw2kv52_v3yvcaXMMCkE3MOcI='
-#      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow.db
-#      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
-#    ports:
-#      - "8081:8080"
-#    volumes:
-#      - ./airflow/entrypoint.sh:/opt/airflow/entrypoint.sh
-#      - ./airflow/dags:/opt/airflow/dags
-#      - ./scripts:/app
-#    command: bash /opt/airflow/entrypoint.sh
-#    networks:
-#      - hadoop_network
-
   spark-master:
     image: bitnami/spark:latest
     container_name: spark-master
@@ -126,7 +105,6 @@ services:
 
 volumes:
   nifi_data:
-  airflow_logs:
 
 networks:
   hadoop_network:
