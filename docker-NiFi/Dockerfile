@@ -21,6 +21,7 @@ RUN apt-get update && apt-get install -y \
 
 # Installa le dipendenze Python dal requirements.txt
 COPY ../scripts/requirements.txt /app/requirements.txt
+# se sbagliato qui va pip3
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
 # Imposta le versioni di Spark e Hadoop
