@@ -14,11 +14,17 @@ RUN apt-get update && apt-get install -y \
     && ln -sf /usr/local/bin/python3.12 /usr/bin/python3 \
     && ln -sf /usr/local/bin/pip3.12 /usr/bin/pip3 \
     && cd / && rm -rf /tmp/Python-3.12.0 /tmp/Python-3.12.0.tgz \
+    && curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py \
+    && python3 get-pip.py \
+    && rm get-pip.py] \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Installa le dipendenze Python dal requirements.txt
+COPY ../scripts/requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r /app/requirements.txt
 
 # Imposta le versioni di Spark e Hadoop
-ENV SPARK_VERSION=3.5.5
+ENV SPARK_VERSION=3.5.6
 ENV HADOOP_VERSION=3
 ENV SPARK_HOME=/opt/spark
 ENV PATH=$PATH:$SPARK_HOME/bin
@@ -29,8 +35,8 @@ RUN curl -fsSL https://downloads.apache.org/spark/spark-${SPARK_VERSION}/spark-$
     mv /opt/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION} $SPARK_HOME
 
 # Copia dei file di configurazione Hadoop
-COPY hadoop-conf/core-site.xml /opt/nifi/hadoop-conf/core-site.xml
-COPY hadoop-conf/hdfs-site.xml /opt/nifi/hadoop-conf/hdfs-site.xml
+COPY docker-NiFi/hadoop-conf/core-site.xml /opt/nifi/hadoop-conf/core-site.xml
+COPY docker-NiFi/hadoop-conf/hdfs-site.xml /opt/nifi/hadoop-conf/hdfs-site.xml
 
 # (Facoltativo) Link simbolici per Spark verso la configurazione Hadoop
 RUN mkdir -p /opt/spark/conf && \

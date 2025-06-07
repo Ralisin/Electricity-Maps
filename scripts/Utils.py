@@ -1,3 +1,8 @@
+from datetime import datetime
+from influxdb_client import BucketRetentionRules, InfluxDBClient, Point
+from influxdb_client.client.write_api import SYNCHRONOUS, WritePrecision
+
+
 def combine_into_single_rdd(sc, file_paths):
     """
     Load multiple text files into a single Spark RDD, removing the header from each file.
@@ -46,7 +51,6 @@ def combine_into_single_rdd(sc, file_paths):
 
     return f_rdd
 
-
 def save_rdd(rdd, path, header=None, sc=None):
     """
     Saves an RDD as a single CSV file, optionally with a header.
@@ -92,3 +96,123 @@ def save_rdd(rdd, path, header=None, sc=None):
     fs.delete(temp_path, True)
 
     return rdd
+
+def normalize_column_names(df):
+    """
+    Renames columns in the given DataFrame to a standardized format for consistency across data sources.
+
+    This function is particularly useful when switching between different input formats (e.g., CSV and Parquet)
+    that may have differing column naming conventions. It renames columns with underscores and simplified names
+    (typically found in Parquet files) to the original column names used in CSV files.
+
+    Parameters:
+        df (pyspark.sql.DataFrame): The input DataFrame whose columns need to be normalized.
+
+    Returns:
+        pyspark.sql.DataFrame: A DataFrame with renamed columns, matching the expected standard names.
+
+    Columns renamed (if present):
+        - "Datetime__UTC_" -> "Datetime (UTC)"
+        - "Zone_name" -> "Zone name"
+        - "Carbon_intensity_gCO_eq_kWh__direct_" -> "Carbon intensity gCO₂eq/kWh (direct)"
+        - "Carbon_free_energy_percentage__CFE__" -> "Carbon-free energy percentage (CFE%)"
+        """
+    rename_map = {
+        "Datetime__UTC_": "Datetime (UTC)",
+        "Zone_name": "Zone name",
+        "Carbon_intensity_gCO_eq_kWh__direct_": "Carbon intensity gCO₂eq/kWh (direct)",
+        "Carbon_free_energy_percentage__CFE__": "Carbon-free energy percentage (CFE%)"
+    }
+
+    for old_name, new_name in rename_map.items():
+        if old_name in df.columns:
+            df = df.withColumnRenamed(old_name, new_name)
+
+    return df
+
+
+def create_bucket_if_not_exists(influx_url, token, org, bucket_name, retention_days=30):
+    """
+    Crea un bucket InfluxDB se non esiste.
+
+    Args:
+        influx_url (str): URL di InfluxDB (es. "http://localhost:8086")
+        token (str): token di autenticazione
+        org (str): organizzazione InfluxDB
+        bucket_name (str): nome del bucket da creare
+        retention_days (int, optional): giorni di retention dati (default 30). 0 = retention illimitata.
+
+    Returns:
+        bucket: oggetto bucket creato o esistente
+    """
+    client = InfluxDBClient(url=influx_url, token=token, org=org)
+    buckets_api = client.buckets_api()
+
+    # Controlla se il bucket esiste
+    existing_buckets = buckets_api.find_buckets().buckets
+    bucket = next((b for b in existing_buckets if b.name == bucket_name), None)
+
+    if bucket is None:
+        print(f"Bucket '{bucket_name}' non trovato. Creo nuovo bucket...")
+        retention_seconds = retention_days * 24 * 60 * 60 if retention_days > 0 else 0
+        retention_rule = BucketRetentionRules(type="expire",
+                                              every_seconds=retention_seconds) if retention_seconds > 0 else None
+        bucket = buckets_api.create_bucket(bucket_name=bucket_name, org=org, retention_rules=retention_rule)
+        print(f"Bucket '{bucket_name}' creato con retention {retention_days} giorni.")
+    else:
+        print(f"Bucket '{bucket_name}' già esistente.")
+
+    client.close()
+    return bucket
+
+def write_reduced_to_influxdb_q1(reduced_rdd, influx_url, token, org, bucket):
+    create_bucket_if_not_exists(influx_url, token, org, bucket)
+
+    client = InfluxDBClient(url=influx_url, token=token, org=org)
+    write_api = client.write_api(write_options=SYNCHRONOUS)
+
+    def to_influx_point(kv):
+        (year, zone_id), (carbon_sum, carbon_min, carbon_max, cfe_sum, cfe_min, cfe_max, count) = kv
+        timestamp = datetime(int(year), 1, 1)
+
+        carbon_mean = carbon_sum / count
+        cfe_mean = cfe_sum / count
+
+        return Point("carbon_data") \
+            .tag("zone_id", zone_id) \
+            .field("carbon_mean", carbon_mean) \
+            .field("carbon_min", carbon_min) \
+            .field("carbon_max", carbon_max) \
+            .field("cfe_mean", cfe_mean) \
+            .field("cfe_min", cfe_min) \
+            .field("cfe_max", cfe_max) \
+            .time(timestamp, WritePrecision.NS)
+
+    points = reduced_rdd.map(to_influx_point).collect()
+    write_api.write(bucket=bucket, org=org, record=points)
+
+    client.close()
+
+def write_reduced_to_influxdb_q2(reduced_rdd, influx_url, token, org, bucket):
+    client = InfluxDBClient(url=influx_url, token=token, org=org)
+    write_api = client.write_api(write_options=SYNCHRONOUS)
+
+    def to_influx_point(kv):
+        date_str, (carbon_sum, cfe_sum, count) = kv
+        try:
+            # Parsing "2022_12" → datetime(2022, 12, 1)
+            timestamp = datetime.strptime(date_str, "%Y_%m")
+        except ValueError:
+            # In caso di errore, salta o imposta data di default
+            timestamp = datetime(1970, 1, 1)
+
+        carbon_mean = carbon_sum / count
+        cfe_mean = cfe_sum / count
+
+        return Point("monthly_carbon_stats") \
+            .field("carbon_mean", carbon_mean) \
+            .field("cfe_mean", cfe_mean) \
+            .time(timestamp, WritePrecision.NS)
+
+    points = reduced_rdd.map(to_influx_point).collect()
+    write_api.write(bucket=bucket, org=org, record=points)

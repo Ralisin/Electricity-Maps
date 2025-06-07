@@ -2,7 +2,9 @@ version: "3.8"
 
 services:
   nifi:
-    build: ./docker-NiFi
+    build:
+      context: .
+      dockerfile: docker-NiFi/Dockerfile
     image: nifi-with-hdfs:1.0
     ports:
       - "8443:8443"
@@ -74,7 +76,10 @@ services:
     tty: true
 
   spark-master:
-    image: bitnami/spark:latest
+    build:
+      context: .
+      dockerfile: docker-spark/Dockerfile
+    image: spark-ralisin:1.0
     container_name: spark-master
     environment:
       - SPARK_MODE=master
@@ -88,9 +93,13 @@ services:
     networks:
       - hadoop_network
 
-  spark-worker:
-    image: bitnami/spark:latest
-    container_name: spark-worker
+
+  spark-worker-1:
+    build:
+      context: .
+      dockerfile: docker-spark/Dockerfile
+    image: spark-ralisin:1.0
+    container_name: spark-worker-1
     environment:
       - SPARK_MODE=worker
       - SPARK_MASTER_URL=spark://spark-master:7077
@@ -103,9 +112,61 @@ services:
     networks:
       - hadoop_network
 
+  spark-worker-2:
+    build:
+      context: .
+      dockerfile: docker-spark/Dockerfile
+    image: spark-ralisin:1.0
+    container_name: spark-worker-2
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - HOME=/home
+    depends_on:
+      - spark-master
+    volumes:
+      - ./scripts:/app
+    networks:
+      - hadoop_network
+
+  influxdb:
+    image: influxdb:2.7
+    container_name: influxdb
+    ports:
+      - "8086:8086"
+    volumes:
+      - influxdb_data:/var/lib/influxdb
+    networks:
+      - hadoop_network
+      - grafana_network
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=admin123
+      - DOCKER_INFLUXDB_INIT_ORG=ralisin
+      - DOCKER_INFLUXDB_INIT_BUCKET=init_bucket
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=my-super-secret-token
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - influxdb
+    networks:
+      - grafana_network
+
 volumes:
   nifi_data:
+  influxdb_data:
+  grafana_data:
 
 networks:
   hadoop_network:
+    driver: bridge
+  grafana_network:
     driver: bridge
