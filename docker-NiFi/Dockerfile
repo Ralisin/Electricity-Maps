@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y \
     && cd / && rm -rf /tmp/Python-3.12.0 /tmp/Python-3.12.0.tgz \
     && curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py \
     && python3 get-pip.py \
-    && rm get-pip.py] \
+    && rm get-pip.py \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Installa le dipendenze Python dal requirements.txt
