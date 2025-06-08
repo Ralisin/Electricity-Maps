@@ -130,8 +130,7 @@ def normalize_column_names(df):
 
     return df
 
-
-def create_bucket_if_not_exists(influx_url, token, org, bucket_name, retention_days=30):
+def create_bucket_if_not_exists(influx_url, token, org, bucket_name, retention_days=0):
     """
     Crea un bucket InfluxDB se non esiste.
 
@@ -173,7 +172,8 @@ def write_reduced_to_influxdb_q1(reduced_rdd, influx_url, token, org, bucket):
 
     def to_influx_point(kv):
         (year, zone_id), (carbon_sum, carbon_min, carbon_max, cfe_sum, cfe_min, cfe_max, count) = kv
-        timestamp = datetime(int(year), 1, 1)
+        timestamp = datetime(int(year) - 1, 1, 1)
+        # timestamp = datetime.strptime(year, "%Y")
 
         carbon_mean = carbon_sum / count
         cfe_mean = cfe_sum / count
@@ -194,6 +194,8 @@ def write_reduced_to_influxdb_q1(reduced_rdd, influx_url, token, org, bucket):
     client.close()
 
 def write_reduced_to_influxdb_q2(reduced_rdd, influx_url, token, org, bucket):
+    create_bucket_if_not_exists(influx_url, token, org, bucket)
+
     client = InfluxDBClient(url=influx_url, token=token, org=org)
     write_api = client.write_api(write_options=SYNCHRONOUS)
 

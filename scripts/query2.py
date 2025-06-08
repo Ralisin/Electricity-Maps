@@ -8,7 +8,7 @@ import re
 import sys
 import time
 
-from Utils import combine_into_single_rdd, save_rdd, normalize_column_names
+from Utils import *
 
 # CSV header structure:
 #  0 - Datetime (UTC),
@@ -33,7 +33,13 @@ HOURLY_PARQUET_PATH = PARQUET_PATH + "hourly/"
 RESULT_PATH = BASE_INPUT_PATH + "result/"
 RESULT_QUERY2_PATH = RESULT_PATH + "query2/"
 
-def query2_rdd(sc, file_paths, save_influxdb):
+# InfluxDB
+INFLUXDB_URL = "http://influxdb:8086"
+BUCKET = "Q2"
+ORG = "ralisin"
+TOKEN = "my-super-secret-token"
+
+def query2_rdd(sc, file_paths, save=False):
     rdd = combine_into_single_rdd(sc, file_paths)
 
     # Ensure necessary values are not null
@@ -78,6 +84,15 @@ def query2_rdd(sc, file_paths, save_influxdb):
         )
 
     reduced = mapped.reduceByKey(reduce_stats).sortByKey()
+
+    if save:
+        write_reduced_to_influxdb_q2(
+            reduced,
+            INFLUXDB_URL,
+            TOKEN,
+            ORG,
+            BUCKET
+        )
 
     top5_ci_asc = (
         reduced
@@ -170,7 +185,7 @@ def query2_df(spark, file_paths, file_type="csv"):
 
     return rdd_rank, csv_rdd
 
-def main(mode, file_format):
+def main(mode, file_format, save=False):
     if mode == "rdd" and file_format != "csv":
         print("Errore: la modalità RDD supporta solo il formato CSV.", file=sys.stderr)
         sys.exit(1)
@@ -209,7 +224,7 @@ def main(mode, file_format):
 
         if mode == "rdd":
             start = time.time()
-            rdd_rank, csv_rdd = query2_rdd(sc, flist)
+            rdd_rank, csv_rdd = query2_rdd(sc, flist, save)
             end = time.time()
             print(f"[query2_rdd_{file_format}] {country} - Tempo: {end - start:.4f} s")
         elif mode == "df":
@@ -237,9 +252,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Esegui Query2 con RDD o DataFrame e formato CSV/Parquet")
     parser.add_argument("--mode", choices=["rdd", "df"], required=True, help="Modalità di esecuzione: 'rdd' o 'df'")
     parser.add_argument("--format", choices=["csv", "parquet"], default="csv", help="Formato dei file (solo per df)")
+    parser.add_argument("--save", action="store_true", help="Se presente, salva i risultati su InfluxDB")
     args = parser.parse_args()
 
     start = time.time()
-    main(args.mode, args.format)
+    main(args.mode, args.format, args.save)
     end = time.time()
     print(f"[main_query1] Tempo trascorso: {end - start:.4f} secondi")

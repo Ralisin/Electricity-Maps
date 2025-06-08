@@ -1,0 +1,565 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 2,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "feod7ohc5zvnke"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.0.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "feod7ohc5zvnke"
+          },
+          "query": "from(bucket: \"Q2\")\r\n  |> range(start: 2021-01-01)\r\n",
+          "refId": "A"
+        }
+      ],
+      "title": "Q2 - Italy",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "feod7ohc5zvnke"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "fieldMinMax": true,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "carbon_min IT"
+            },
+            "properties": [
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    10
+                  ],
+                  "fill": "dash"
+                }
+              },
+              {
+                "id": "custom.fillBelowTo",
+                "value": "carbon_mean IT"
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 100
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "continuous-RdYlGr",
+                  "seriesBy": "max"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "carbon_max IT"
+            },
+            "properties": [
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    10
+                  ],
+                  "fill": "dash"
+                }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 20
+              },
+              {
+                "id": "custom.fillBelowTo",
+                "value": "carbon_mean IT"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "continuous-RdYlGr",
+                  "seriesBy": "min"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "carbon_mean IT"
+            },
+            "properties": [
+              {
+                "id": "custom.lineWidth",
+                "value": 3
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 21
+              },
+              {
+                "id": "custom.fillBelowTo",
+                "value": "carbon_min IT"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "continuous-RdYlGr",
+                  "seriesBy": "max"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 12,
+        "x": 0,
+        "y": 11
+      },
+      "id": 3,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.0.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "feod7ohc5zvnke"
+          },
+          "hide": true,
+          "query": "from(bucket: \"Q1\")\r\n  |> range(start: 2020-01-01)\r\n  |> filter(fn: (r) => r._measurement == \"carbon_data\")\r\n  |> filter(fn: (r) => r.zone_id == \"IT\")\r\n  |> filter(fn: (r) => r._field == \"carbon_mean\" or r._field == \"carbon_min\" or r._field == \"carbon_max\")\r\n  |> aggregateWindow(every: 1y, fn: mean, createEmpty: false)\r\n  |> yield(name: \"agg\")\r\n",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "feod7ohc5zvnke"
+          },
+          "hide": false,
+          "query": "from(bucket: \"Q1\")\r\n  |> range(start: 2020-01-01)\r\n  |> filter(fn: (r) => r._measurement == \"carbon_data\")\r\n  |> filter(fn: (r) => r.zone_id == \"IT\")\r\n  |> filter(fn: (r) => r._field == \"carbon_mean\")\r\n  |> aggregateWindow(every: 1y, fn: mean, createEmpty: false)\r\n  |> yield(name: \"agg\")\r\n",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "feod7ohc5zvnke"
+          },
+          "hide": false,
+          "query": "from(bucket: \"Q1\")\r\n  |> range(start: 2020-01-01)\r\n  |> filter(fn: (r) => r._measurement == \"carbon_data\")\r\n  |> filter(fn: (r) => r.zone_id == \"IT\")\r\n  |> filter(fn: (r) => r._field == \"carbon_min\")\r\n  |> aggregateWindow(every: 1y, fn: mean, createEmpty: false)\r\n  |> yield(name: \"agg\")\r\n",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "feod7ohc5zvnke"
+          },
+          "hide": false,
+          "query": "from(bucket: \"Q1\")\r\n  |> range(start: 2020-01-01)\r\n  |> filter(fn: (r) => r._measurement == \"carbon_data\")\r\n  |> filter(fn: (r) => r.zone_id == \"IT\")\r\n  |> filter(fn: (r) => r._field == \"carbon_max\")\r\n  |> aggregateWindow(every: 1y, fn: mean, createEmpty: false)\r\n  |> yield(name: \"agg\")\r\n",
+          "refId": "D"
+        }
+      ],
+      "title": "Q1 - Italy",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "feod7ohc5zvnke"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "fieldMinMax": true,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "carbon_min SE"
+            },
+            "properties": [
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    10
+                  ],
+                  "fill": "dash"
+                }
+              },
+              {
+                "id": "custom.fillBelowTo",
+                "value": "carbon_mean SE"
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 100
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "continuous-RdYlGr",
+                  "seriesBy": "max"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "carbon_max SE"
+            },
+            "properties": [
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    10
+                  ],
+                  "fill": "dash"
+                }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 20
+              },
+              {
+                "id": "custom.fillBelowTo",
+                "value": "carbon_mean SE"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "continuous-RdYlGr",
+                  "seriesBy": "min"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "carbon_mean SE"
+            },
+            "properties": [
+              {
+                "id": "custom.lineWidth",
+                "value": 3
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 21
+              },
+              {
+                "id": "custom.fillBelowTo",
+                "value": "carbon_min SE"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "continuous-RdYlGr",
+                  "seriesBy": "max"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 12,
+        "x": 12,
+        "y": 11
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.0.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "feod7ohc5zvnke"
+          },
+          "hide": true,
+          "query": "from(bucket: \"Q1\")\r\n  |> range(start: 2020-01-01)\r\n  |> filter(fn: (r) => r._measurement == \"carbon_data\")\r\n  |> filter(fn: (r) => r.zone_id == \"SE\")\r\n  |> filter(fn: (r) => r._field == \"carbon_mean\" or r._field == \"carbon_min\" or r._field == \"carbon_max\")\r\n  |> aggregateWindow(every: 1y, fn: mean, createEmpty: false)\r\n  |> yield(name: \"agg\")\r\n",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "feod7ohc5zvnke"
+          },
+          "hide": false,
+          "query": "from(bucket: \"Q1\")\r\n  |> range(start: 2020-01-01)\r\n  |> filter(fn: (r) => r._measurement == \"carbon_data\")\r\n  |> filter(fn: (r) => r.zone_id == \"SE\")\r\n  |> filter(fn: (r) => r._field == \"carbon_mean\")\r\n  |> aggregateWindow(every: 1y, fn: mean, createEmpty: false)\r\n  |> yield(name: \"agg\")\r\n",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "feod7ohc5zvnke"
+          },
+          "hide": false,
+          "query": "from(bucket: \"Q1\")\r\n  |> range(start: 2020-01-01)\r\n  |> filter(fn: (r) => r._measurement == \"carbon_data\")\r\n  |> filter(fn: (r) => r.zone_id == \"SE\")\r\n  |> filter(fn: (r) => r._field == \"carbon_min\")\r\n  |> aggregateWindow(every: 1y, fn: mean, createEmpty: false)\r\n  |> yield(name: \"agg\")\r\n",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "feod7ohc5zvnke"
+          },
+          "hide": false,
+          "query": "from(bucket: \"Q1\")\r\n  |> range(start: 2020-01-01)\r\n  |> filter(fn: (r) => r._measurement == \"carbon_data\")\r\n  |> filter(fn: (r) => r.zone_id == \"SE\")\r\n  |> filter(fn: (r) => r._field == \"carbon_max\")\r\n  |> aggregateWindow(every: 1y, fn: mean, createEmpty: false)\r\n  |> yield(name: \"agg\")\r\n",
+          "refId": "D"
+        }
+      ],
+      "title": "Q1 - Sweden",
+      "type": "timeseries"
+    }
+  ],
+  "preload": false,
+  "schemaVersion": 41,
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "2020-12-26T14:55:36.313Z",
+    "to": "2024-01-07T14:13:14.896Z"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "SABD queries",
+  "uid": "c448df8b-0f94-4d42-b4a1-6ba6aa2b5a65",
+  "version": 16
+}

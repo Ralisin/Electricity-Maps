@@ -93,7 +93,6 @@ services:
     networks:
       - hadoop_network
 
-
   spark-worker-1:
     build:
       context: .

@@ -14,15 +14,11 @@ RUN apt-get update && apt-get install -y \
     && ln -sf /usr/local/bin/python3.12 /usr/bin/python3 \
     && ln -sf /usr/local/bin/pip3.12 /usr/bin/pip3 \
     && cd / && rm -rf /tmp/Python-3.12.0 /tmp/Python-3.12.0.tgz \
-    && curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py \
-    && python3 get-pip.py \
-    && rm get-pip.py \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Installa le dipendenze Python dal requirements.txt
 COPY ../scripts/requirements.txt /app/requirements.txt
-# se sbagliato qui va pip3
-RUN pip install --no-cache-dir -r /app/requirements.txt
+RUN pip3 install --no-cache-dir -r /app/requirements.txt
 
 # Imposta le versioni di Spark e Hadoop
 ENV SPARK_VERSION=3.5.6
