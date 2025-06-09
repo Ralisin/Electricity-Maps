@@ -22,6 +22,8 @@ from Utils  import *
 #  9 - Data estimated,
 # 10 - Data estimation method
 
+REPETITIONS = 10
+
 # Input path on HDFS
 BASE_INPUT_PATH = "hdfs://master:54310/nifi/"
 DATA_PATH = BASE_INPUT_PATH + "data/"
@@ -38,10 +40,7 @@ BUCKET = "Q1"
 ORG = "ralisin"
 TOKEN = "my-super-secret-token"
 
-def query1_rdd(sc, file_paths, save=False):
-    # Get a single rdd for all files
-    rdd = combine_into_single_rdd(sc, file_paths)
-
+def query1_rdd(rdd, save=False):
     # Ensure necessary values are not null
     rdd = rdd.filter(
         lambda fields:
@@ -97,14 +96,8 @@ def query1_rdd(sc, file_paths, save=False):
 
     return csv_rdd
 
-
-def query1_df(spark, file_paths, file_type="csv"):
-    if file_type == "csv":
-        df = spark.read.option("header", True).csv(file_paths)
-    elif file_type == "parquet":
-        df = spark.read.option("header", True).parquet(*file_paths)
-        df = normalize_column_names(df)
-    else:
+def query1_df(df):
+    if df is None:
         return None
 
     df = df.filter(
@@ -171,21 +164,44 @@ def main(mode, file_format, save=False):
 
     for country, flist in files_by_country.items():
         rdd = None
+        df = None
+
+        time_list = []
 
         if mode == "df":
-            start = time.time()
-            rdd = query1_df(spark, flist, file_type=file_format)
-            end = time.time()
-            print(f"[query1_df_{file_format}] {country} - Tempo: {end - start:.4f} s")
+            if file_format == "csv":
+                df = spark.read.option("header", True).csv(file_paths)
+            elif file_format == "parquet":
+                df = spark.read.option("header", True).parquet(*file_paths)
+                df = normalize_column_names(df)
+
+            for rep in range(REPETITIONS):
+                start = time.time()
+                rdd = query1_df(df)
+                end = time.time()
+
+                print(f"[query1_df_{file_format}] {country} - Tempo: {end - start:.4f} s")
+
+                time_list.append(end - start)
+            print(f"[query1_df_{file_format}] {country} - Tempo medio (esclusa la prima esecuzione): {sum(time_list[1:]) / len(time_list[1:])}")
+
             for row in rdd.take(10):
                 print(row)
             print("------------------------")
 
         elif mode == "rdd":
-            start = time.time()
-            rdd = query1_rdd(sc, flist, save)
-            end = time.time()
-            print(f"[query1_rdd_{file_format}] {country} - Tempo: {end - start:.4f} s")
+
+            for rep in range(REPETITIONS):
+                rdd = combine_into_single_rdd(sc, file_paths)
+                start = time.time()
+                rdd = query1_rdd(rdd, save)
+                end = time.time()
+
+                print(f"[query1_rdd_{file_format}] {country} - Tempo: {end - start:.4f} s")
+
+                time_list.append(end - start)
+            print(f"[query1_rdd_{file_format}] {country} - Tempo medio (esclusa la prima esecuzione): {sum(time_list[1:]) / len(time_list[1:])}")
+
             for row in rdd.take(10):
                 print(row)
             print("------------------------")

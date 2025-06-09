@@ -8,6 +8,7 @@ services:
     image: nifi-with-hdfs:1.0
     ports:
       - "8443:8443"
+      - "4039:4040"
     environment:
       - NIFI_SECURITY_USER_OIDC_ENABLED=false
       - NIFI_WEB_HTTPS_PORT=8443
@@ -88,6 +89,7 @@ services:
     ports:
       - "7077:7077"
       - "8080:8080"
+      - "4040:4040"
     volumes:
       - ./scripts:/app
     networks:
@@ -104,6 +106,9 @@ services:
       - SPARK_MASTER_URL=spark://spark-master:7077
       - SPARK_RPC_AUTHENTICATION_ENABLED=no
       - HOME=/home
+    ports:
+      - "8081:8081"
+      - "4041:4040"
     depends_on:
       - spark-master
     volumes:
@@ -122,6 +127,9 @@ services:
       - SPARK_MASTER_URL=spark://spark-master:7077
       - SPARK_RPC_AUTHENTICATION_ENABLED=no
       - HOME=/home
+    ports:
+      - "8082:8081"
+      - "4042:4040"
     depends_on:
       - spark-master
     volumes:

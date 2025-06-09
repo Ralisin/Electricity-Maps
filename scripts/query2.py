@@ -23,6 +23,8 @@ from Utils import *
 #  9 - Data estimated,
 # 10 - Data estimation method
 
+REPETITIONS = 10
+
 # Input path on HDFS
 BASE_INPUT_PATH = "hdfs://master:54310/nifi/"
 DATA_PATH = BASE_INPUT_PATH + "data/"
@@ -39,9 +41,7 @@ BUCKET = "Q2"
 ORG = "ralisin"
 TOKEN = "my-super-secret-token"
 
-def query2_rdd(sc, file_paths, save=False):
-    rdd = combine_into_single_rdd(sc, file_paths)
-
+def query2_rdd(sc, rdd, save=False):
     # Ensure necessary values are not null
     rdd = rdd.filter(
         lambda fields:
@@ -142,13 +142,8 @@ def query2_rdd(sc, file_paths, save=False):
 
     return rdd_rank, csv_rdd
 
-def query2_df(spark, file_paths, file_type="csv"):
-    if file_type == "csv":
-        df = spark.read.option("header", True).csv(file_paths)
-    elif file_type == "parquet":
-        df = spark.read.option("header", True).parquet(*file_paths)
-        df = normalize_column_names(df)
-    else:
+def query2_df(df):
+    if df is None:
         return None
 
     df = df.filter(
@@ -222,16 +217,36 @@ def main(mode, file_format, save=False):
         rdd_rank = None
         csv_rdd = None
 
+        time_list = []
+
         if mode == "rdd":
-            start = time.time()
-            rdd_rank, csv_rdd = query2_rdd(sc, flist, save)
-            end = time.time()
-            print(f"[query2_rdd_{file_format}] {country} - Tempo: {end - start:.4f} s")
+            rdd = combine_into_single_rdd(sc, file_paths)
+
+            for rep in range(REPETITIONS):
+                start = time.time()
+                rdd_rank, csv_rdd = query2_rdd(sc, rdd, save)
+                end = time.time()
+
+                print(f"[query2_rdd_{file_format}] {country} - Tempo: {end - start:.4f} s")
+
+                time_list.append(end - start)
+            print(f"[query2_rdd_{file_format}] {country} - Tempo medio (esclusa la prima esecuzione): {sum(time_list[1:]) / len(time_list[1:])}")
         elif mode == "df":
-            start = time.time()
-            rdd_rank, csv_rdd = query2_df(spark, flist, file_type=file_format)
-            end = time.time()
-            print(f"[query2_df_{file_format}] {country} - Tempo: {end - start:.4f} s")
+            if file_format == "csv":
+                df = spark.read.option("header", True).csv(file_paths)
+            elif file_format == "parquet":
+                df = spark.read.option("header", True).parquet(*file_paths)
+                df = normalize_column_names(df)
+
+            for rep in range(REPETITIONS):
+                start = time.time()
+                rdd_rank, csv_rdd = query2_df(df)
+                end = time.time()
+
+                print(f"[query2_df_{file_format}] {country} - Tempo: {end - start:.4f} s")
+
+                time_list.append(end - start)
+            print(f"[query2_df_{file_format}] {country} - Tempo medio (esclusa la prima esecuzione): {sum(time_list[1:]) / len(time_list[1:])}")
 
         if rdd_rank is None or csv_rdd is None:
             print(f"{mode}, {country}, {file_format} - rdd_rank or csv_rdd are None")
