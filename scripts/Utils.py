@@ -4,37 +4,6 @@ from influxdb_client.client.write_api import SYNCHRONOUS, WritePrecision
 
 
 def combine_into_single_rdd(sc, file_paths):
-    """
-    Load multiple text files into a single Spark RDD, removing the header from each file.
-
-    Parameters:
-    -----------
-    sc : pyspark.SparkContext
-        The Spark context used to create RDDs.
-    file_paths : list of str
-        List of file paths to be loaded.
-
-    Returns:
-    --------
-    pyspark.RDD
-        An RDD containing all rows from all files, excluding the headers,
-        where each row is represented as a list of strings split by commas.
-
-    Description:
-    ------------
-    For each file in the list, the function:
-      - reads the file into an RDD,
-      - extracts the first line as the header,
-      - filters out all lines equal to the header,
-    then combines all RDDs into a single RDD and maps each line by splitting it at commas.
-
-    Example usage:
-    --------------
-    >>> sc = SparkContext()
-    >>> files = ["file1.csv", "file2.csv"]
-    >>> rdd = combine_into_single_rdd(sc, files)
-    """
-
     list_rdd = []
 
     # Remove the header from each file
@@ -52,16 +21,6 @@ def combine_into_single_rdd(sc, file_paths):
     return f_rdd
 
 def save_rdd(rdd, path, header=None, sc=None):
-    """
-    Saves an RDD as a single CSV file, optionally with a header.
-
-    :param rdd: The RDD to be saved.
-    :param path: Final output path, including the desired filename (e.g., "/path/to/output.csv").
-    :param header: (Optional) A CSV-formatted string to be used as header.
-    :param sc: The active SparkContext, required for filesystem operations.
-
-    :return: The (possibly modified) RDD that was saved.
-    """
     if sc is None:
         raise ValueError("SparkContext (sc) must be provided")
 
@@ -98,25 +57,6 @@ def save_rdd(rdd, path, header=None, sc=None):
     return rdd
 
 def normalize_column_names(df):
-    """
-    Renames columns in the given DataFrame to a standardized format for consistency across data sources.
-
-    This function is particularly useful when switching between different input formats (e.g., CSV and Parquet)
-    that may have differing column naming conventions. It renames columns with underscores and simplified names
-    (typically found in Parquet files) to the original column names used in CSV files.
-
-    Parameters:
-        df (pyspark.sql.DataFrame): The input DataFrame whose columns need to be normalized.
-
-    Returns:
-        pyspark.sql.DataFrame: A DataFrame with renamed columns, matching the expected standard names.
-
-    Columns renamed (if present):
-        - "Datetime__UTC_" -> "Datetime (UTC)"
-        - "Zone_name" -> "Zone name"
-        - "Carbon_intensity_gCO_eq_kWh__direct_" -> "Carbon intensity gCO₂eq/kWh (direct)"
-        - "Carbon_free_energy_percentage__CFE__" -> "Carbon-free energy percentage (CFE%)"
-        """
     rename_map = {
         "Datetime__UTC_": "Datetime (UTC)",
         "Zone_name": "Zone name",
@@ -131,19 +71,6 @@ def normalize_column_names(df):
     return df
 
 def create_bucket_if_not_exists(influx_url, token, org, bucket_name, retention_days=0):
-    """
-    Crea un bucket InfluxDB se non esiste.
-
-    Args:
-        influx_url (str): URL di InfluxDB (es. "http://localhost:8086")
-        token (str): token di autenticazione
-        org (str): organizzazione InfluxDB
-        bucket_name (str): nome del bucket da creare
-        retention_days (int, optional): giorni di retention dati (default 30). 0 = retention illimitata.
-
-    Returns:
-        bucket: oggetto bucket creato o esistente
-    """
     client = InfluxDBClient(url=influx_url, token=token, org=org)
     buckets_api = client.buckets_api()
 
